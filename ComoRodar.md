@@ -21,12 +21,18 @@ Para o jogo em rede, você precisa iniciar o servidor:
     ```bash
     npm install
     ```
-3.  Inicie o servidor:
+3.  Inicie o servidor (com hot-reload):
     ```bash
-    node server.js
+    npm run dev
+    ```
+    Ou sem hot-reload:
+    ```bash
+    npm start
     ```
 
-O servidor será iniciado na porta `55555`. Abra o navegador em `http://localhost:55555`. Ambos os jogadores devem inserir o mesmo nome de jogo para se conectarem.
+O servidor será iniciado na porta `8888`. Abra o navegador em `http://localhost:8888`. Ambos os jogadores devem inserir o mesmo nome de jogo para se conectarem.
+
+> **Nota:** A porta original do projeto era `55555`, porém essa porta pertence ao range efêmero do macOS (49152–65535), utilizado pelo sistema operacional para conexões de saída. Para evitar conflitos, a porta foi alterada para `8888`.
 
 ---
 
