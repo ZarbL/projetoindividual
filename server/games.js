@@ -77,12 +77,16 @@ GameCollection.prototype.getGame = function (game) {
 };
 
 GameCollection.prototype.createGame = function (id) {
-  if (this._games[game]) {
+  if (this._games[id]) {
     return false;
   }
   var game = new Game(id, this);
   this._games[id] = game;
   return true;
+};
+
+GameCollection.prototype.getActiveGamesCount = function () {
+  return Object.keys(this._games).length;
 };
 
 GameCollection.prototype.removeGame = function (id) {
