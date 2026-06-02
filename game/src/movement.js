@@ -144,10 +144,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       backgroundInitialized = false,
       lastPosition,
       lastMovement,
-      framesWithoutMotion = 0,
-      getUserMedia =
-        navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia,
-      URL = w.URL || w.webkitURL || w.mozURL;
+      framesWithoutMotion = 0;
 
   Movement.init = function (options) {
     var self = this;
@@ -159,25 +156,31 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     vid.width = Movement.constants.WIDTH;
     vid.height = Movement.constants.HEIGHT;
     this._initCanvases();
-    getUserMedia.call(navigator, { video: true }, function (stream) {
-      if (!initialized) {
-        initialized = true;
-        vid.src = URL.createObjectURL(stream);
-        vid.play();
-        self._start();
-      }
-      initialized = true;
-    }, function () {
-      alert('Access forbidden');
-    });
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert('Seu navegador não suporta acesso à webcam.');
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(function (stream) {
+        if (!initialized) {
+          initialized = true;
+          vid.srcObject = stream;
+          vid.play();
+          self._start();
+        }
+      })
+      .catch(function () {
+        alert('Acesso à webcam negado ou não disponível.');
+      });
   };
 
   Movement._initCanvases = function () {
+    var container = document.getElementById('webcam-parent') || document.body;
+
     can = document.createElement('canvas');
-    document.body.appendChild(can);
     can.id = 'movementjs-main-canvas';
-    can.style.position = 'absolute';
-    can.style.visibility = 'visible';
+    can.style.display = 'block';
+    container.appendChild(can);
 
     background = document.createElement('canvas');
     document.body.appendChild(background);

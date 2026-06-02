@@ -14,9 +14,9 @@
         <h1>mk.js</h1>
 
         <div class="mode-tabs">
-            <button class="mode-btn active" onclick="selectMode('basic')">Básico</button>
-            <button class="mode-btn" onclick="selectMode('multiplayer')">Multiplayer</button>
-            <button class="mode-btn" onclick="selectMode('network')">Rede</button>
+            <button class="mode-btn active" onclick="selectMode('basic', event)">Básico</button>
+            <button class="mode-btn" onclick="selectMode('multiplayer', event)">Multiplayer</button>
+            <button class="mode-btn" onclick="selectMode('network', event)">Rede</button>
         </div>
 
         <!-- Básico -->
@@ -53,17 +53,19 @@
     <div id="game-container" style="display:none">
         <table>
             <thead>
-                <th>Arena</th>
-                <th>Webcam</th>
+                <tr>
+                    <th>Arena</th>
+                    <th>Webcam</th>
+                </tr>
             </thead>
             <tbody>
                 <tr>
                     <td>
                         <div id="parent">
                             <div id="utils">
-                                <div id="player1Name" class="playerName">P1</div>
+                                <div id="player1Name" class="playerName">Sub-Zero</div>
                                 <div id="player1LifeBar" class="lifebar"><div class="life" id="player1Life"></div></div>
-                                <div id="player2Name" class="playerName">P2</div>
+                                <div id="player2Name" class="playerName">Kano</div>
                                 <div id="player2LifeBar" class="lifebar"><div class="life" id="player2Life"></div></div>
                             </div>
                             <div id="arena"></div>
@@ -74,8 +76,30 @@
                     </td>
                     <td id="webcam-parent"></td>
                 </tr>
+                <tr>
+                    <td colspan="2">
+                        <h1>Instructions</h1>
+                        <p>
+                            <ul class="instructions-list">
+                                <li>For playing with gesture recognition you need a modern browser with webcam support.</li>
+                                <li>Choose proper place to position your computer. I recommend you to use white wall as background and dark clothes for best contrast.</li>
+                                <li>Stay outside the scope of the webcam. It needs to capture the background behind you at first place.</li>
+                                <li>Allow to the web page to use your webcam.</li>
+                                <li>If the webcam canvas is black then you can start playing otherwise restart and try again.</li>
+                                <li>Stay in about 2.5 meters away from your computer in the middle of the view zone.</li>
+                                <li>For walking left stay in the left side of the webcam view region and right if you want to walk right. If you want to stop just go back in the middle.</li>
+                                <li>Raise your left or right arm to punch.</li>
+                                <li>Raise your left or right leg to kick.</li>
+                                <li>Squat and your fighter will squat too.</li>
+                                <li>Squat and punch for squat low punch attack.</li>
+                                <li>Enjoy!</li>
+                            </ul>
+                        </p>
+                    </td>
+                </tr>
             </tbody>
         </table>
+        <div class="manual"></div>
         <div style="text-align:center; margin-top:10px;">
             <button class="mode-btn" onclick="backToLobby()">← Voltar ao Lobby</button>
         </div>
@@ -103,21 +127,17 @@
     <script>
     (function () {
 
-        var currentMode = 'basic';
-
         function $(id) { return document.getElementById(id); }
 
         function setLife(container, life) {
             container.style.width = life + '%';
         }
 
-
-        window.selectMode = function (mode) {
-            currentMode = mode;
+        window.selectMode = function (mode, event) {
             document.querySelectorAll('.mode-btn').forEach(function (btn) {
                 btn.classList.remove('active');
             });
-            event.target.classList.add('active');
+            if (event && event.target) { event.target.classList.add('active'); }
             document.querySelectorAll('.form-section').forEach(function (s) {
                 s.classList.remove('active');
             });
@@ -127,6 +147,25 @@
         function showGame() {
             $('lobby').style.display = 'none';
             $('game-container').style.display = 'block';
+            startWebcamFeed();
+        }
+
+        function startWebcamFeed() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+            var container = $('webcam-parent');
+            var video = document.createElement('video');
+            video.autoplay = true;
+            video.width = 400;
+            video.height = 300;
+            video.style.display = 'block';
+            container.appendChild(video);
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function (stream) {
+                    video.srcObject = stream;
+                })
+                .catch(function () {
+                    container.innerHTML = '<p style="color:#666;font-size:12px;padding:10px;">Webcam não disponível.</p>';
+                });
         }
 
         // mk.js registra listeners de teclado com funções anônimas (não removíveis).
@@ -145,7 +184,6 @@
         // Nomes dos jogadores ficam na UI e no banco — não no engine do jogo.
         function gameEndCallback(gameMode, p1Name, p2Name) {
             return function (loser) {
-                // loser.getName() retorna 'subzero' ou 'kano'
                 var winnerName = (loser.getName() === 'subzero') ? p2Name : p1Name;
                 fetch('/api/match', {
                     method: 'POST',
