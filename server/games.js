@@ -71,6 +71,10 @@ GameCollection.prototype.createGame = function (id) {
   return true;
 };
 
+GameCollection.prototype.getActiveGamesCount = function () {
+  return Object.keys(this._games).length;
+};
+
 GameCollection.prototype.removeGame = function (id) {
   if (this._games[id]) {
     delete this._games[id];
