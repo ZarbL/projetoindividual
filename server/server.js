@@ -1,32 +1,11 @@
-var express = require('express'),
-    app = express(),
+var app = require('./app'),
     server = require('http').createServer(app),
     io = require('socket.io')(server),
     { initDb } = require('./db/index'),
     repository = require('./db/repository'),
     GameCollection = require('./games.js').GameCollection;
 
-app.use(express.static(__dirname + '/../game'));
-app.use(express.json());
-
-app.get('/api/history', async function (req, res) {
-  try {
-    var history = await repository.getMatchHistory();
-    res.json(history);
-  } catch (err) {
-    res.json([]);
-  }
-});
-
-app.post('/api/match', async function (req, res) {
-  var { gameMode, player1Name, player2Name, winnerName } = req.body;
-  try {
-    await repository.saveLocalMatch(gameMode, player1Name, player2Name, winnerName);
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+app.use(require('express').static(__dirname + '/../game'));
 
 function onGameEnd(gameName, winnerSocket, loserSocket) {
   var winnerName = winnerSocket.playerName || winnerSocket.id;
@@ -51,8 +30,8 @@ var Responses = {
 
 io.on('connection', function (socket) {
   socket.on(Requests.CREATE_GAME, function (data) {
-    var gameName = typeof data === 'object' ? data.gameName : data;
-    var playerName = typeof data === 'object' ? data.playerName : 'Player 1';
+    var gameName = typeof data === 'object' && data !== null ? data.gameName : data;
+    var playerName = typeof data === 'object' && data !== null ? data.playerName : 'Player 1';
 
     socket.playerName = playerName;
 
@@ -71,8 +50,8 @@ io.on('connection', function (socket) {
   });
 
   socket.on(Requests.JOIN_GAME, function (data) {
-    var gameName = typeof data === 'object' ? data.gameName : data;
-    var playerName = typeof data === 'object' ? data.playerName : 'Player 2';
+    var gameName = typeof data === 'object' && data !== null ? data.gameName : data;
+    var playerName = typeof data === 'object' && data !== null ? data.playerName : 'Player 2';
 
     socket.playerName = playerName;
 
