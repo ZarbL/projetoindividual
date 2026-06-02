@@ -17,7 +17,6 @@
             <button class="mode-btn active" onclick="selectMode('basic', event)">Básico</button>
             <button class="mode-btn" onclick="selectMode('multiplayer', event)">Multiplayer</button>
             <button class="mode-btn" onclick="selectMode('network', event)">Rede</button>
-            <button class="mode-btn" onclick="selectMode('webcam', event)">Webcam</button>
         </div>
 
         <!-- Básico -->
@@ -48,14 +47,6 @@
             </div>
             <button class="start-btn" onclick="startNetwork()">Conectar</button>
         </div>
-
-        <!-- Webcam -->
-        <div id="form-webcam" class="form-section">
-            <p class="mode-desc">Controle o personagem com gestos captados pela sua webcam.</p>
-            <input id="p1-webcam" class="lobby-input" type="text" placeholder="Seu nome" maxlength="20" />
-            <br/>
-            <button class="start-btn" onclick="startWebcam()">Iniciar com Webcam</button>
-        </div>
     </div>
 
     <!-- Área do jogo (oculta até iniciar) -->
@@ -85,30 +76,33 @@
                     </td>
                     <td id="webcam-parent"></td>
                 </tr>
+                <tr>
+                    <td colspan="2">
+                        <h1>Instructions</h1>
+                        <p>
+                            <ul class="instructions-list">
+                                <li>For playing with gesture recognition you need a modern browser with webcam support.</li>
+                                <li>Choose proper place to position your computer. I recommend you to use white wall as background and dark clothes for best contrast.</li>
+                                <li>Stay outside the scope of the webcam. It needs to capture the background behind you at first place.</li>
+                                <li>Allow to the web page to use your webcam.</li>
+                                <li>If the webcam canvas is black then you can start playing otherwise restart and try again.</li>
+                                <li>Stay in about 2.5 meters away from your computer in the middle of the view zone.</li>
+                                <li>For walking left stay in the left side of the webcam view region and right if you want to walk right. If you want to stop just go back in the middle.</li>
+                                <li>Raise your left or right arm to punch.</li>
+                                <li>Raise your left or right leg to kick.</li>
+                                <li>Squat and your fighter will squat too.</li>
+                                <li>Squat and punch for squat low punch attack.</li>
+                                <li>Enjoy!</li>
+                            </ul>
+                        </p>
+                    </td>
+                </tr>
             </tbody>
         </table>
+        <div class="manual"></div>
         <div style="text-align:center; margin-top:10px;">
             <button class="mode-btn" onclick="backToLobby()">← Voltar ao Lobby</button>
         </div>
-    </div>
-
-    <!-- Instruções (exibidas no lobby, modo webcam selecionado) -->
-    <div id="instructions-container" style="display:none">
-        <h2>Instructions</h2>
-        <ul class="instructions-list">
-            <li>For playing with gesture recognition you need a modern browser with webcam support (Chrome or Firefox).</li>
-            <li>Choose a proper place to position your computer. A white wall as background and dark clothes provide the best contrast.</li>
-            <li>Stay outside the scope of the webcam. It needs to capture the background behind you first.</li>
-            <li>Allow the web page to use your webcam.</li>
-            <li>If the webcam canvas is black you can start playing; otherwise restart and try again.</li>
-            <li>Stay about 2.5 metres away from your computer in the middle of the view zone.</li>
-            <li>Walk left by staying in the left side of the webcam view region, and right to walk right. Return to the middle to stop.</li>
-            <li>Raise your left or right arm to punch.</li>
-            <li>Raise your left or right leg to kick.</li>
-            <li>Squat and your fighter will squat too.</li>
-            <li>Squat and punch for a squat low punch attack.</li>
-            <li>Enjoy!</li>
-        </ul>
     </div>
 
     <!-- Histórico de partidas -->
@@ -148,13 +142,30 @@
                 s.classList.remove('active');
             });
             $('form-' + mode).classList.add('active');
-            $('instructions-container').style.display = (mode === 'webcam') ? 'block' : 'none';
         };
 
         function showGame() {
             $('lobby').style.display = 'none';
-            $('instructions-container').style.display = 'none';
             $('game-container').style.display = 'block';
+            startWebcamFeed();
+        }
+
+        function startWebcamFeed() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+            var container = $('webcam-parent');
+            var video = document.createElement('video');
+            video.autoplay = true;
+            video.width = 400;
+            video.height = 300;
+            video.style.display = 'block';
+            container.appendChild(video);
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function (stream) {
+                    video.srcObject = stream;
+                })
+                .catch(function () {
+                    container.innerHTML = '<p style="color:#666;font-size:12px;padding:10px;">Webcam não disponível.</p>';
+                });
         }
 
         // mk.js registra listeners de teclado com funções anônimas (não removíveis).
@@ -256,25 +267,6 @@
             }).ready(startGame);
         };
 
-        window.startWebcam = function () {
-            var p1 = $('p1-webcam').value.trim() || 'Jogador';
-            $('player1Name').textContent = p1;
-            $('player2Name').textContent = 'Kano';
-            showGame();
-            mk.start({
-                arena: { container: $('arena'), arena: mk.arenas.types.THRONE_ROOM },
-                fighters: [{ name: 'subzero' }, { name: 'kano' }],
-                gameType: 'webcaminput',
-                callbacks: {
-                    attack: function (f, o) {
-                        var bar = (o.getName() === 'kano') ? $('player2Life') : $('player1Life');
-                        setLife(bar, o.getLife());
-                    },
-                    'game-end': gameEndCallback('basic', p1, 'Kano')
-                }
-            }).ready(startGame);
-        };
-
         function fetchHistory() {
             fetch('/api/history')
                 .then(function (res) { return res.json(); })
@@ -285,7 +277,7 @@
                         return;
                     }
                     tbody.innerHTML = rows.map(function (r) {
-                        var modeLabel = { basic: 'Básico', multiplayer: 'Multiplayer', network: 'Rede', webcaminput: 'Webcam' }[r.game_mode] || r.game_mode;
+                        var modeLabel = { basic: 'Básico', multiplayer: 'Multiplayer', network: 'Rede' }[r.game_mode] || r.game_mode;
                         var date = new Date(r.created_at).toLocaleString('pt-BR');
                         var winner = r.winner_name || (r.status === 'in_progress' ? '<em>em andamento</em>' : '-');
                         var winnerClass = r.winner_name ? 'winner-cell' : '';
