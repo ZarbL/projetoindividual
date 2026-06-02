@@ -267,6 +267,16 @@
             }).ready(startGame);
         };
 
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function fetchHistory() {
             fetch('/api/history')
                 .then(function (res) { return res.json(); })
@@ -277,14 +287,14 @@
                         return;
                     }
                     tbody.innerHTML = rows.map(function (r) {
-                        var modeLabel = { basic: 'Básico', multiplayer: 'Multiplayer', network: 'Rede' }[r.game_mode] || r.game_mode;
+                        var modeLabel = { basic: 'Básico', multiplayer: 'Multiplayer', network: 'Rede' }[r.game_mode] || escapeHtml(r.game_mode);
                         var date = new Date(r.created_at).toLocaleString('pt-BR');
-                        var winner = r.winner_name || (r.status === 'in_progress' ? '<em>em andamento</em>' : '-');
+                        var winner = r.winner_name ? escapeHtml(r.winner_name) : (r.status === 'in_progress' ? '<em>em andamento</em>' : '-');
                         var winnerClass = r.winner_name ? 'winner-cell' : '';
                         return '<tr>' +
                             '<td>' + modeLabel + '</td>' +
-                            '<td>' + (r.player1_name || '-') + '</td>' +
-                            '<td>' + (r.player2_name || '-') + '</td>' +
+                            '<td>' + (escapeHtml(r.player1_name) || '-') + '</td>' +
+                            '<td>' + (escapeHtml(r.player2_name) || '-') + '</td>' +
                             '<td class="' + winnerClass + '">' + winner + '</td>' +
                             '<td>' + date + '</td>' +
                             '</tr>';
