@@ -8,117 +8,259 @@
     <link rel="stylesheet" href="styles/styles.css" />
 </head>
 <body>
-    <table>
-    <thead>
-        <th>
-            Arena
-        </th>
-        <th>
-            Webcam
-        </th>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-                <div id="parent">
-                    <div id="utils">
-                        <div id="player1Name" class="playerName">Sub-Zero</div>
-                        <div id="player1LifeBar" class="lifebar"><div class="life" id="player1Life"></div></div>
-                        <div id="player2Name" class="playerName">Kano</div>
-                        <div id="player2LifeBar" class="lifebar"><div class="life" id="player2Life"></div></div>
-                    </div>
-                    <div id="arena">
-                    </div>
-                    <div id="loading">
-                        <span class="loadingLabel">Loading...</span>
-                    </div>
-                </div>
-            </td>
-            <td id="webcam-parent">
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <h1>Instructions</h1>
-                <p>
-                    <ul class="instructions-list">
-                        <li>For playing with gesture recognition you need Google Chrome 22+ or Firefox 19+.</li>
-                        <li>Choose proper place to position your computer. I recommend you to use white wall as background and dark clothes for best contrast.</li>
-                        <li>Stay outside the scope of the webcam. It needs to capture the background behind you at first place.</li>
-                        <li>Allow to the web page to use your webcam.</li>
-                        <li>If the webcam canvas is black then you can start playing otherwise restart and try again.</li>
-                        <li>Stay in about 2.5 meters away from your computer in the middle of the view zone.</li>
-                        <li>For walking left stay in the left side of the webcam view region and right if you want to walk right. If you want to stop just go back in the middle.</li>
-                        <li>Raise your left or right arm to punch.</li>
-                        <li>Raise your left or right leg to kick.</li>
-                        <li>Squat and your fighter will squat too.</li>
-                        <li>Squat and punch for squat low punch attack.</li>
-                        <li>Enjoy!</li>
-                    </ul>
-                </p>
-            </td>
-        </tr>
-    </tbody>
-    </table>
-    <div class="manual">
+
+    <!-- Lobby -->
+    <div id="lobby">
+        <h1>mk.js</h1>
+
+        <div class="mode-tabs">
+            <button class="mode-btn active" onclick="selectMode('basic')">Básico</button>
+            <button class="mode-btn" onclick="selectMode('multiplayer')">Multiplayer</button>
+            <button class="mode-btn" onclick="selectMode('network')">Rede</button>
+        </div>
+
+        <!-- Básico -->
+        <div id="form-basic" class="form-section active">
+            <p class="mode-desc">Um jogador vs CPU. Use as teclas A/S/D/F para atacar e ←↑↓→ para mover.</p>
+            <input id="p1-basic" class="lobby-input" type="text" placeholder="Seu nome" maxlength="20" />
+            <br/>
+            <button class="start-btn" onclick="startBasic()">Jogar</button>
+        </div>
+
+        <!-- Multiplayer -->
+        <div id="form-multiplayer" class="form-section">
+            <p class="mode-desc">Dois jogadores no mesmo teclado.</p>
+            <input id="p1-mp" class="lobby-input" type="text" placeholder="Nome do Jogador 1" maxlength="20" />
+            <input id="p2-mp" class="lobby-input" type="text" placeholder="Nome do Jogador 2" maxlength="20" />
+            <br/>
+            <button class="start-btn" onclick="startMultiplayer()">Jogar</button>
+        </div>
+
+        <!-- Rede -->
+        <div id="form-network" class="form-section">
+            <p class="mode-desc">Dois jogadores via rede. Ambos devem usar o mesmo nome de partida.</p>
+            <input id="net-player" class="lobby-input" type="text" placeholder="Seu nome" maxlength="20" />
+            <input id="net-game" class="lobby-input" type="text" placeholder="Nome da partida" maxlength="30" />
+            <div class="role-select">
+                <label><input type="radio" name="role" value="host" checked /> Criar partida (Host)</label>
+                <label><input type="radio" name="role" value="join" /> Entrar em partida</label>
+            </div>
+            <button class="start-btn" onclick="startNetwork()">Conectar</button>
+        </div>
     </div>
+
+    <!-- Área do jogo (oculta até iniciar) -->
+    <div id="game-container" style="display:none">
+        <table>
+            <thead>
+                <th>Arena</th>
+                <th>Webcam</th>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div id="parent">
+                            <div id="utils">
+                                <div id="player1Name" class="playerName">P1</div>
+                                <div id="player1LifeBar" class="lifebar"><div class="life" id="player1Life"></div></div>
+                                <div id="player2Name" class="playerName">P2</div>
+                                <div id="player2LifeBar" class="lifebar"><div class="life" id="player2Life"></div></div>
+                            </div>
+                            <div id="arena"></div>
+                            <div id="loading">
+                                <span class="loadingLabel">Loading...</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td id="webcam-parent"></td>
+                </tr>
+            </tbody>
+        </table>
+        <div style="text-align:center; margin-top:10px;">
+            <button class="mode-btn" onclick="backToLobby()">← Voltar ao Lobby</button>
+        </div>
+    </div>
+
+    <!-- Histórico de partidas -->
+    <div id="history-container">
+        <h2>Histórico de Partidas</h2>
+        <table id="history-table">
+            <thead>
+                <tr>
+                    <th>Modo</th>
+                    <th>Jogador 1</th>
+                    <th>Jogador 2</th>
+                    <th>Vencedor</th>
+                    <th>Data</th>
+                </tr>
+            </thead>
+            <tbody id="history-body">
+                <tr><td colspan="5" style="text-align:center; color:#666;">Carregando...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
     <script>
-        (function () {
+    (function () {
 
-            function $(id) {
-                return document.getElementById(id);
-            }
+        var currentMode = 'basic';
 
-            function setLife(container, life) {
-                container.style.width = life + '%';
-            }
+        function $(id) { return document.getElementById(id); }
 
-            document.onkeydown = function (e) {
-                if (e.keyCode === 32) {
-                    window.location.reload();
-                }
+        function setLife(container, life) {
+            container.style.width = life + '%';
+        }
+
+
+        window.selectMode = function (mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(function (btn) {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            document.querySelectorAll('.form-section').forEach(function (s) {
+                s.classList.remove('active');
+            });
+            $('form-' + mode).classList.add('active');
+        };
+
+        function showGame() {
+            $('lobby').style.display = 'none';
+            $('game-container').style.display = 'block';
+        }
+
+        // mk.js registra listeners de teclado com funções anônimas (não removíveis).
+        // Recarregar é a única forma de limpar o estado sem modificar o engine.
+        window.backToLobby = function () {
+            window.location.reload();
+        };
+
+        function startGame() {
+            $('loading').style.visibility = 'hidden';
+            $('arena').style.visibility = 'visible';
+            $('utils').style.visibility = 'visible';
+        }
+
+        // Fighters são sempre subzero/kano (únicos sprites disponíveis).
+        // Nomes dos jogadores ficam na UI e no banco — não no engine do jogo.
+        function gameEndCallback(gameMode, p1Name, p2Name) {
+            return function (loser) {
+                // loser.getName() retorna 'subzero' ou 'kano'
+                var winnerName = (loser.getName() === 'subzero') ? p2Name : p1Name;
+                fetch('/api/match', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gameMode: gameMode, player1Name: p1Name, player2Name: p2Name, winnerName: winnerName })
+                }).then(function () { fetchHistory(); });
+                setTimeout(backToLobby, 3000);
             };
+        }
 
-            (function () {
-                
-                var startGame = function () {
-                    $('loading').style.visibility = 'hidden';
-                    $('arena').style.visibility = 'visible';
-                    $('utils').style.visibility = 'visible';
-                };
-                
-                var options = {
-                    arena: {
-                        container: document.getElementById('arena'),
-                        arena: mk.arenas.types.THRONE_ROOM
+        window.startBasic = function () {
+            var p1 = $('p1-basic').value.trim() || 'Jogador';
+            $('player1Name').textContent = p1;
+            $('player2Name').textContent = 'Kano';
+            showGame();
+            mk.start({
+                arena: { container: $('arena'), arena: mk.arenas.types.THRONE_ROOM },
+                fighters: [{ name: 'subzero' }, { name: 'kano' }],
+                gameType: 'basic',
+                callbacks: {
+                    attack: function (f, o) {
+                        var bar = (o.getName() === 'kano') ? $('player2Life') : $('player1Life');
+                        setLife(bar, o.getLife());
                     },
-                    fighters: [{ name: 'Subzero' }, { name: 'Kano' }],
-                    callbacks: {
-                        attack: function (f, o, l) {
-                            if (o.getName() === 'kano') {
-                                setLife($('player2Life'), o.getLife());
-                            } else {
-                                setLife($('player1Life'), o.getLife());
-                            }
-                        }
-
-                    },
-                    isHost: /^yes$/i.test(prompt('Are you going to be host?')),
-                    gameName: prompt('Enter game name:'),
-                    gameType: 'network'
-                };
-
-                function startNewGame() {
-                    mk.start(options).ready(function () {
-                        startGame();
-                    });
+                    'game-end': gameEndCallback('basic', p1, 'Kano')
                 }
-                
-                startNewGame();
-                
-            }());
+            }).ready(startGame);
+        };
 
-        }());
+        window.startMultiplayer = function () {
+            var p1 = $('p1-mp').value.trim() || 'Jogador 1';
+            var p2 = $('p2-mp').value.trim() || 'Jogador 2';
+            $('player1Name').textContent = p1;
+            $('player2Name').textContent = p2;
+            showGame();
+            mk.start({
+                arena: { container: $('arena'), arena: mk.arenas.types.THRONE_ROOM },
+                fighters: [{ name: 'subzero' }, { name: 'kano' }],
+                gameType: 'multiplayer',
+                callbacks: {
+                    attack: function (f, o) {
+                        var bar = (o.getName() === 'kano') ? $('player2Life') : $('player1Life');
+                        setLife(bar, o.getLife());
+                    },
+                    'game-end': gameEndCallback('multiplayer', p1, p2)
+                }
+            }).ready(startGame);
+        };
+
+        window.startNetwork = function () {
+            var playerName = $('net-player').value.trim() || 'Jogador';
+            var gameName = $('net-game').value.trim();
+            var isHost = document.querySelector('input[name="role"]:checked').value === 'host';
+
+            if (!gameName) {
+                alert('Digite o nome da partida.');
+                return;
+            }
+
+            $('player1Name').textContent = isHost ? playerName : '?';
+            $('player2Name').textContent = isHost ? '?' : playerName;
+            showGame();
+
+            mk.start({
+                arena: { container: $('arena'), arena: mk.arenas.types.THRONE_ROOM },
+                fighters: [{ name: 'subzero' }, { name: 'kano' }],
+                gameType: 'network',
+                isHost: isHost,
+                gameName: gameName,
+                callbacks: {
+                    attack: function (f, o) {
+                        var bar = (o.getName() === 'kano') ? $('player2Life') : $('player1Life');
+                        setLife(bar, o.getLife());
+                    },
+                    'game-end': function () { setTimeout(backToLobby, 2000); },
+                    'player-connected': function () {
+                        $('player1Name').textContent = isHost ? playerName : 'Sub-Zero';
+                        $('player2Name').textContent = isHost ? 'Oponente' : playerName;
+                    }
+                }
+            }).ready(startGame);
+        };
+
+        function fetchHistory() {
+            fetch('/api/history')
+                .then(function (res) { return res.json(); })
+                .then(function (rows) {
+                    var tbody = $('history-body');
+                    if (!rows.length) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">Nenhuma partida registrada.</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = rows.map(function (r) {
+                        var modeLabel = { basic: 'Básico', multiplayer: 'Multiplayer', network: 'Rede' }[r.game_mode] || r.game_mode;
+                        var date = new Date(r.created_at).toLocaleString('pt-BR');
+                        var winner = r.winner_name || (r.status === 'in_progress' ? '<em>em andamento</em>' : '-');
+                        var winnerClass = r.winner_name ? 'winner-cell' : '';
+                        return '<tr>' +
+                            '<td>' + modeLabel + '</td>' +
+                            '<td>' + (r.player1_name || '-') + '</td>' +
+                            '<td>' + (r.player2_name || '-') + '</td>' +
+                            '<td class="' + winnerClass + '">' + winner + '</td>' +
+                            '<td>' + date + '</td>' +
+                            '</tr>';
+                    }).join('');
+                })
+                .catch(function () {
+                    $('history-body').innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">Banco de dados não disponível.</td></tr>';
+                });
+        }
+
+        fetchHistory();
+        setInterval(fetchHistory, 10000);
+
+    }());
     </script>
 </body>
 </html>

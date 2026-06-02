@@ -1,1 +1,18 @@
-{ "root": true, "env": { "browser": true, "es6": true }, "extends": "eslint:recommended", "parserOptions": { "ecmaVersion": 2018 }, "globals": { "Movement": "readonly", "io": "readonly" }, "rules": { "no-unused-vars": ["warn", { "args": "none" }] } }
+{
+  "root": true,
+  "env": {
+    "browser": true,
+    "es6": true
+  },
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "ecmaVersion": 2018
+  },
+  "globals": {
+    "Movement": "readonly",
+    "io": "readonly"
+  },
+  "rules": {
+    "no-unused-vars": ["warn", { "args": "none" }]
+  }
+}

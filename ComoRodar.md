@@ -9,6 +9,29 @@ Este é um jogo de luta simples criado com HTML5 canvas e JavaScript. Ele possui
 
 Para rodar o jogo localmente, basta abrir o arquivo `game/index.html` em qualquer navegador moderno.
 
+### Execução com Docker
+
+Para subir o ambiente de desenvolvimento completo (aplicação + banco de dados Postgres):
+
+1.  Certifique-se de ter o Docker Desktop instalado e rodando.
+2.  Na raiz do projeto, execute:
+    ```bash
+    docker compose up --build
+    ```
+3.  Acesse o jogo em `http://localhost:8888`.
+
+Para encerrar:
+```bash
+docker compose down
+```
+
+Para encerrar e remover os dados do banco:
+```bash
+docker compose down -v
+```
+
+---
+
 ### Execução em Rede (Servidor Node.js)
 
 Para o jogo em rede, você precisa iniciar o servidor:
