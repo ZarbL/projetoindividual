@@ -136,3 +136,35 @@ jobs:
 
       - name: Análise CodeQL
         uses: github/codeql-action/analyze@v3
+
+  sonarcloud:
+    name: Qualidade – SonarCloud
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Gerar relatório de cobertura
+        run: npm test -- --coverage
+
+      - name: SonarCloud Scan
+        run: npx sonarqube-scanner
+        working-directory: .
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io

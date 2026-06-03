@@ -1,11 +1,13 @@
 const { GameCollection } = require('../games');
 
 function mockSocket(id) {
+  const handlers = {};
   return {
     id,
     emit: jest.fn(),
-    on: jest.fn(),
-    disconnect: jest.fn()
+    disconnect: jest.fn(),
+    on: jest.fn((event, cb) => { handlers[event] = cb; }),
+    trigger: (event, data) => handlers[event] && handlers[event](data)
   };
 }
 
@@ -83,5 +85,104 @@ describe('Game - gerenciamento de jogadores', () => {
     game.addPlayer(s1);
     game.addPlayer(mockSocket('s2'));
     expect(s1.emit).toHaveBeenCalledWith('player-connected', 0);
+  });
+
+  test('getId retorna o identificador da partida', () => {
+    const game = collection.getGame('sala1');
+    expect(game.getId()).toBe('sala1');
+  });
+});
+
+describe('Game - encerramento de partida', () => {
+  let collection;
+  let onGameEnd;
+
+  beforeEach(() => {
+    onGameEnd = jest.fn();
+    collection = new GameCollection(onGameEnd);
+    collection.createGame('sala1');
+  });
+
+  test('endGame chama o callback com id, vencedor e perdedor', () => {
+    const s1 = mockSocket('s1');
+    const s2 = mockSocket('s2');
+    const game = collection.getGame('sala1');
+    game.addPlayer(s1);
+    game.addPlayer(s2);
+    game.endGame(0);
+    expect(onGameEnd).toHaveBeenCalledWith('sala1', s2, s1);
+  });
+
+  test('endGame desconecta o vencedor', () => {
+    const s1 = mockSocket('s1');
+    const s2 = mockSocket('s2');
+    const game = collection.getGame('sala1');
+    game.addPlayer(s1);
+    game.addPlayer(s2);
+    game.endGame(1);
+    expect(s1.disconnect).toHaveBeenCalled();
+  });
+
+  test('endGame remove a partida da coleção', () => {
+    const game = collection.getGame('sala1');
+    game.addPlayer(mockSocket('s1'));
+    game.addPlayer(mockSocket('s2'));
+    game.endGame(0);
+    expect(collection.getGame('sala1')).toBeUndefined();
+  });
+
+  test('endGame não faz nada se chamado sem jogadores', () => {
+    const game = collection.getGame('sala1');
+    expect(() => game.endGame(0)).not.toThrow();
+    expect(onGameEnd).not.toHaveBeenCalled();
+  });
+});
+
+describe('Game - encaminhamento de eventos entre jogadores', () => {
+  let collection;
+
+  beforeEach(() => {
+    collection = new GameCollection();
+    collection.createGame('sala1');
+  });
+
+  test('evento do p1 é encaminhado para p2', () => {
+    const s1 = mockSocket('s1');
+    const s2 = mockSocket('s2');
+    const game = collection.getGame('sala1');
+    game.addPlayer(s1);
+    game.addPlayer(s2);
+    s1.trigger('event', { key: 'left' });
+    expect(s2.emit).toHaveBeenCalledWith('event', { key: 'left' });
+  });
+
+  test('evento do p2 é encaminhado para p1', () => {
+    const s1 = mockSocket('s1');
+    const s2 = mockSocket('s2');
+    const game = collection.getGame('sala1');
+    game.addPlayer(s1);
+    game.addPlayer(s2);
+    s2.trigger('life-update', { life: 50 });
+    expect(s1.emit).toHaveBeenCalledWith('life-update', { life: 50 });
+  });
+
+  test('desconexão do p1 encerra a partida', () => {
+    const s1 = mockSocket('s1');
+    const s2 = mockSocket('s2');
+    const game = collection.getGame('sala1');
+    game.addPlayer(s1);
+    game.addPlayer(s2);
+    s1.trigger('disconnect');
+    expect(collection.getGame('sala1')).toBeUndefined();
+  });
+
+  test('desconexão do p2 encerra a partida', () => {
+    const s1 = mockSocket('s1');
+    const s2 = mockSocket('s2');
+    const game = collection.getGame('sala1');
+    game.addPlayer(s1);
+    game.addPlayer(s2);
+    s2.trigger('disconnect');
+    expect(collection.getGame('sala1')).toBeUndefined();
   });
 });
