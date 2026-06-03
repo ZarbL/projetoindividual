@@ -29,6 +29,14 @@
             "!server.js"
         ],
         "coverageReporters": ["lcov", "text"],
-        "coverageDirectory": "coverage"
+        "coverageDirectory": "coverage",
+        "coverageThreshold": {
+            "global": {
+                "lines": 90,
+                "statements": 85,
+                "branches": 85,
+                "functions": 70
+            }
+        }
     }
 }
