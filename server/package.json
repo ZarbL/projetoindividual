@@ -22,5 +22,13 @@
         "nodemon": "^3.0.2",
         "supertest": "^7.2.2"
     },
-    "license": "MIT"
+    "license": "MIT",
+    "jest": {
+        "collectCoverageFrom": [
+            "*.js",
+            "!server.js"
+        ],
+        "coverageReporters": ["lcov", "text"],
+        "coverageDirectory": "coverage"
+    }
 }
