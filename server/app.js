@@ -1,11 +1,11 @@
 var express = require('express');
-var rateLimit = require('express-rate-limit');
+const rateLimit = require('express-rate-limit');
 var app = express();
 var repository = require('./db/repository');
 
 app.use(express.json());
 
-var apiLimiter = rateLimit({
+const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 60,
   standardHeaders: true,
@@ -15,7 +15,7 @@ var apiLimiter = rateLimit({
 
 app.get('/health', apiLimiter, async function (req, res) {
   try {
-    var { pool } = require('./db/index');
+    const { pool } = require('./db/index');
     await pool.query('SELECT 1');
     res.json({ ok: true });
   } catch (err) {
