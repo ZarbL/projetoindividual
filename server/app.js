@@ -13,10 +13,7 @@ var apiLimiter = rateLimit({
   skip: function () { return process.env.NODE_ENV === 'test'; }
 });
 
-app.use('/api/', apiLimiter);
-app.use('/health', apiLimiter);
-
-app.get('/health', async function (req, res) {
+app.get('/health', apiLimiter, async function (req, res) {
   try {
     var { pool } = require('./db/index');
     await pool.query('SELECT 1');
@@ -26,7 +23,7 @@ app.get('/health', async function (req, res) {
   }
 });
 
-app.get('/api/history', async function (req, res) {
+app.get('/api/history', apiLimiter, async function (req, res) {
   try {
     var history = await repository.getMatchHistory();
     res.json(history);
@@ -35,7 +32,7 @@ app.get('/api/history', async function (req, res) {
   }
 });
 
-app.post('/api/match', async function (req, res) {
+app.post('/api/match', apiLimiter, async function (req, res) {
   var body = req.body;
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
     return res.status(400).json({ error: 'invalid body' });
