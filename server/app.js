@@ -9,7 +9,8 @@ var apiLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 60,
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  skip: function () { return process.env.NODE_ENV === 'test'; }
 });
 
 app.use('/api/', apiLimiter);
