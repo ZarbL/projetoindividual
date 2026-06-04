@@ -1,10 +1,29 @@
 var express = require('express');
+const rateLimit = require('express-rate-limit');
 var app = express();
 var repository = require('./db/repository');
 
 app.use(express.json());
 
-app.get('/api/history', async function (req, res) {
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: function () { return process.env.NODE_ENV === 'test'; }
+});
+
+app.get('/health', apiLimiter, async function (req, res) {
+  try {
+    const { pool } = require('./db/index');
+    await pool.query('SELECT 1');
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(503).json({ error: err.message });
+  }
+});
+
+app.get('/api/history', apiLimiter, async function (req, res) {
   try {
     var history = await repository.getMatchHistory();
     res.json(history);
@@ -13,7 +32,7 @@ app.get('/api/history', async function (req, res) {
   }
 });
 
-app.post('/api/match', async function (req, res) {
+app.post('/api/match', apiLimiter, async function (req, res) {
   var body = req.body;
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
     return res.status(400).json({ error: 'invalid body' });
