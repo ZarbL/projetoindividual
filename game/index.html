@@ -189,8 +189,9 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ gameMode: gameMode, player1Name: p1Name, player2Name: p2Name, winnerName: winnerName })
-                }).then(function () { fetchHistory(); });
-                setTimeout(backToLobby, 3000);
+                })
+                .then(function () { fetchHistory(); })
+                .finally(function () { setTimeout(backToLobby, 2000); });
             };
         }
 

@@ -4,6 +4,16 @@ var repository = require('./db/repository');
 
 app.use(express.json());
 
+app.get('/health', async function (req, res) {
+  try {
+    var { pool } = require('./db/index');
+    await pool.query('SELECT 1');
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(503).json({ error: err.message });
+  }
+});
+
 app.get('/api/history', async function (req, res) {
   try {
     var history = await repository.getMatchHistory();
