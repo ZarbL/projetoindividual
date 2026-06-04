@@ -22,8 +22,8 @@ spec:
             - until pg_isready -h db -U postgres -d mkjs; do echo "Aguardando DB..."; sleep 2; done
       containers:
         - name: backend
-          image: mkjs-backend:latest
-          imagePullPolicy: Never
+          image: ghcr.io/zarbl/mkjs-backend:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8888
           env:

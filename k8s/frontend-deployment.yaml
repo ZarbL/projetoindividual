@@ -15,7 +15,16 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: mkjs-frontend:latest
-          imagePullPolicy: Never
+          image: ghcr.io/zarbl/mkjs-frontend:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
+            - containerPort: 443
+          volumeMounts:
+            - name: tls-certs
+              mountPath: /etc/nginx/certs
+              readOnly: true
+      volumes:
+        - name: tls-certs
+          secret:
+            secretName: mkjs-tls
