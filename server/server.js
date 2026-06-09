@@ -5,7 +5,7 @@ var app = require('./app'),
     repository = require('./db/repository'),
     GameCollection = require('./games.js').GameCollection;
 
-app.use(require('express').static(__dirname + '/../game'));
+app.use(require('express').static(__dirname + '/game'));
 
 function onGameEnd(gameName, winnerSocket, loserSocket) {
   var winnerName = winnerSocket.playerName || winnerSocket.id;
@@ -74,16 +74,18 @@ io.on('connection', function (socket) {
   });
 });
 
+var port = process.env.PORT || 8888;
+
 initDb()
   .then(function () {
-    server.listen(8888, function () {
-      console.log('Server running on port 8888');
+    server.listen(port, function () {
+      console.log('Server running on port ' + port);
     });
   })
   .catch(function (err) {
     console.error('Database connection failed:', err.message);
     console.warn('Starting server without database...');
-    server.listen(8888, function () {
-      console.log('Server running on port 8888 (no database)');
+    server.listen(port, function () {
+      console.log('Server running on port ' + port + ' (no database)');
     });
   });
