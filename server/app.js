@@ -5,6 +5,10 @@ var repository = require('./db/repository');
 
 app.use(express.json());
 
+app.get('/ping', function (req, res) {
+  res.json({ ok: true });
+});
+
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 60,
